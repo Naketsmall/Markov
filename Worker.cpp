@@ -21,11 +21,10 @@ private:
     const char *chars;
 };
 
-std::string Worker::clean_word(std::string str) {
-    str.erase(std::remove_if(str.begin(), str.end(), IsChars("() !,.:;1234567890")), str.end());
+void Worker::clean_word(std::string &str) {
+    str.erase(std::remove_if(str.begin(), str.end(), IsChars("() !?,.:;1234567890")), str.end());
     for (int i = 0; i < str.size(); i++)
         str[i] = tolower(str[i]);
-        return str;
 }
 
 Worker::Worker(int rank, int size) {
@@ -34,58 +33,58 @@ Worker::Worker(int rank, int size) {
     map = {};
 }
 
+auto print_key_value = [](const auto &key, const auto &value) {
+    printf("\t\tKey:[%s] Value:[%d]\n", key.c_str(), value);
+};
+
+auto print_map(std::unordered_map<std::string, std::map<std::string, int>> &map){
+    for(std::unordered_map<std::string, std::map<std::string, int>>::iterator it = map.begin(); it != map.end(); ++it) {
+        printf("Key: %s\n", (it->first).c_str());
+        for (const auto &[key, value]: (it->second))
+            print_key_value(key, value);
+    }
+}
+
+void map_insert(std::unordered_map<std::string, std::map<std::string, int>> &map, std::map<std::string, int> buf,
+                std::string &s1, std::string &s2) {
+    if (map.find(s1) == map.end())
+        map[s1] = buf;
+    else {
+        if (map[s1].find(s2) == map[s1].end())
+            map[s1][s2] = 1;
+        else
+            map[s1][s2] = map[s1][s2] + 1;
+    }
+}
+
 int Worker::make_map(std::string filename) {
     std::ifstream file(filename);
 
-    if(file.is_open())
+    if (file.is_open())
         printf("n%d: File is opened\n", rank);
     else {
         printf("n%d: ERROR - FILE CAN'T BE OPENED\n", rank);
-        return 1;
+        return 1; //TODO: Add resource file with constants and my errcodes
     }
 
     std::string s1, s2;
-    std::map<std::string, int> buf{{s1, 1}};
-    bool even = 0;
     file >> s1; //TODO: checking for zero string
-    s1 = clean_word(s1);
     file >> s2;
+    s1 = clean_word(s1);
     s2 = clean_word(s2);
+    std::map<std::string, int> buf{{s2, 1}};
 
-    if (map.find(s1) == map.end()){
-        map[s1] = buf;
+    while (!file.eof()) {
+        buf[s2] = 1;
+        map_insert(map, buf, s1, s2);
+        buf.erase(s2);
+        file >> s1;
+        s1 = clean_word(s1);
+        s1.swap(s2);
     }
 
-    while(!file.eof()) {
-        if (even) {
-            if (map.find(s2) == map.end()){
-                map[s2] = buf;
-            } else {
-                map[s2][s1] = map[s2][s1] + 1;
-            }
-            file >> s1;
-            s1 = clean_word(s1);
-        } else {
-            if (map.find(s1) == map.end()){
-                map[s1] = buf;
-            } else {
-                map[s1][s2] = map[s1][s2] + 1;
-            }
-            file >> s2;
-            s2 = clean_word(s2);
-        }
-        even = !even;
-    }
     file.close();
-
-    auto print_key_value = [](const auto& key, const auto& value) {
-        printf("Key:[%s] Value:[%d]\n", key.c_str(), value);
-    };
-
-    for (const auto& [key, value] : map["my"]) // TODO: Чет фигня какая-то
-        print_key_value(key, value);
-
-
+    print_map(map);
     return 0;
 }
 

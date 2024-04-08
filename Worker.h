@@ -20,7 +20,7 @@ public:
 private:
     int rank, size;
     std::unordered_map<std::string, std::map<std::string, int>> map;
-    std::string clean_word(std::string str);
+    void clean_word(std::string &str);
 
 };
 

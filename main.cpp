@@ -22,13 +22,18 @@ int main(int argc, char* argv[]) {
     check(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
     check(MPI_Comm_size(MPI_COMM_WORLD, &size));
 
-    printf("%d\n", rank);
+    printf("process:%d/%d has started\n", rank, size);
 
 
-    std::string filename = "/home/epsilon/CLionProjects/CNN/text.txt";
+    std::string f1 = "/home/epsilon/CLionProjects/CNN/t1.txt";
+    std::string f2 = "/home/epsilon/CLionProjects/CNN/t2.txt";
+    if (rank == 0) {
+        Worker w(rank, size);
+        w.make_map(f1);
+    }
     if (rank == 1) {
-        Worker w1(0, 1);
-        w1.make_map(filename);
+        Worker w(rank, size);
+        w.make_map(f2);
     }
     MPI_Finalize();
     return 0;
