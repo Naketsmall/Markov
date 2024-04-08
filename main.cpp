@@ -1,22 +1,44 @@
-#include "db_cxx.h"
-#include <exception>
+#include <cstdio>
+#include <string>
+#include <fstream>
+#include <ctype.h>
+#include <algorithm>
+#include <mpi.h>
+#include "Worker.h"
 
-int main() {
-    Db db(NULL, 0); // Instantiate the Db object
-    u_int32_t oFlags = DB_CREATE; // Open flags;
-    try {
-// Open the database
-        db.open(NULL, // Transaction pointer
-                "my_db.db", // Database file name
-                NULL, // Optional logical database name
-                DB_BTREE, // Database access method
-                oFlags, // Open flags
-                0); // File mode (using defaults)
-// DbException is not subclassed from std::exception, so
-// need to catch both of these.
-    } catch (DbException &e) {
-// Error handling code goes here
-    } catch (std::exception &e) {
-// Error handling code goes here
+
+void check(int val) {
+    if (val != MPI_SUCCESS) {
+        printf("ERROR\n");
+        MPI_Abort(MPI_COMM_WORLD, val);
     }
 }
+
+int main(int argc, char* argv[]) {
+
+    int rank, size;
+    MPI_Status status;
+    check(MPI_Init(&argc, &argv));
+    check(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
+    check(MPI_Comm_size(MPI_COMM_WORLD, &size));
+
+    printf("%d\n", rank);
+
+
+    std::string filename = "/home/epsilon/CLionProjects/CNN/text.txt";
+    if (rank == 1) {
+        Worker w1(0, 1);
+        w1.make_map(filename);
+    }
+    MPI_Finalize();
+    return 0;
+}
+
+
+
+
+
+
+
+
+
