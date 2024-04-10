@@ -8,19 +8,17 @@
 
 #include <string>
 #include <map>
+#include "MarkovChain.h"
 
 
 class Worker {
 public:
-    Worker(int rank, int size);
+    Worker(int rank, int n);
     int make_map(std::string filename);
-    int backup_to_storage();
-    int merge();
 
 private:
-    int rank, size;
-    std::unordered_map<std::string, std::map<std::string, int>> map;
-    void clean_word(std::string &str);
+    int rank, num_processes;
+    MarkovChain map;
 
 };
 
