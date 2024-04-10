@@ -14,10 +14,6 @@ int MarkovChain::backup_to_storage() {
     return 0;
 }
 
-int MarkovChain::merge() {
-    return 0;
-}
-
 int MarkovChain::get_size() {
     return size_map;
 }
@@ -34,6 +30,7 @@ void MarkovChain::insert(std::string s1, std::string s2) {
         else
             map[s1][s2] = map[s1][s2] + 1;
     }
+    size_map++;
 }
 
 auto print_key_value = [](const auto &key, const auto &value) {
@@ -47,3 +44,5 @@ void MarkovChain::print() {
             print_key_value(key, value);
     }
 }
+
+

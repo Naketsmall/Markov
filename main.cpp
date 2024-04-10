@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <mpi.h>
 #include "Worker.h"
+#include "Master.h"
 
 
 void check(int val) {
@@ -16,6 +17,8 @@ void check(int val) {
 
 int main(int argc, char* argv[]) {
 
+    //system("chcp 1251");
+
     int rank, size;
     MPI_Status status;
     check(MPI_Init(&argc, &argv));
@@ -25,15 +28,27 @@ int main(int argc, char* argv[]) {
     printf("process:%d/%d has started\n", rank, size);
 
 
-    std::string f1 = "/home/epsilon/CLionProjects/CNN/t1.txt";
-    std::string f2 = "/home/epsilon/CLionProjects/CNN/t2.txt";
+
     if (rank == 0) {
-        Worker w(rank, size);
-        w.make_map(f1);
+        Master master(size);
+
+        std::string inp;
+        printf("Enter filenames\n");
+        std::cin >> inp;
+        while (inp != "0"){
+            master.add_filename(inp);
+            std::cin >> inp;
+        }
+        //for (std::string f: master.get_filenames())
+          //  printf("%s\n", f.c_str());
+        MPI_Barrier(MPI_COMM_WORLD);
+        master.listen();
     }
-    if (rank == 1) {
+    else {
+        MPI_Barrier(MPI_COMM_WORLD);
         Worker w(rank, size);
-        w.make_map(f2);
+        w.work();
+        //w.make_map(f1);
     }
     MPI_Finalize();
     return 0;
