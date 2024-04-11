@@ -65,8 +65,19 @@ int Worker::make_map(std::string filename) {
 
     file.close();
     //map.print();
-    printf("size of map: %d", map.get_size());
+    printf("size of map: %d\n", map.get_size());
     return 0;
+}
+
+std::string get_message(){
+    MPI_Status status;
+    MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG,MPI_COMM_WORLD,&status);
+    int count;
+    MPI_Get_count(&status,MPI_CHAR,&count);
+
+    char s2[count];
+    MPI_Recv(&s2, count, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    return std::string(s2);
 }
 
 void Worker::work() {
@@ -76,8 +87,7 @@ void Worker::work() {
 
     while (true) {
         MPI_Send(&buf, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-        MPI_Recv(&buf, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-        MPI_Recv(&filename, buf, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        filename = get_message();
         printf("n%d: got msg: %s\n", rank, filename.c_str());
         if (filename == "0")
             break;
@@ -89,4 +99,4 @@ void Worker::work() {
 }
 
 // /home/epsilon/CLionProjects/CNN/t1.txt
-//
+// /home/epsilon/CLionProjects/CNN/t2.txt
