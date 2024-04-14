@@ -17,6 +17,7 @@ public:
     void work();
     int make_map(std::string filename);
     int merge(int rank2, bool share);
+    const std::unordered_map<std::string, std::map<std::string, int>> &get_map();
 
 private:
     int rank, num_processes;

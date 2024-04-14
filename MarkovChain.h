@@ -16,6 +16,8 @@ public:
     int backup_to_storage();
     int get_size();
     void insert(std::string s1, std::string s2);
+    void insert(std::string s1, std::string s2, int count);
+    const std::unordered_map<std::string, std::map<std::string, int>> &get_map();
     void print();
 private:
     int size_map;

@@ -13,7 +13,8 @@ class Master {
 public:
     Master(int n);
     void add_filename(std::string filename);
-    void listen();
+    void analyze();
+    void merge();
     std::vector<std::string> get_filenames();
 private:
     std::vector<std::string> filenames;

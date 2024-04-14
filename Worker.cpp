@@ -43,7 +43,7 @@ int Worker::make_map(std::string filename) {
     file.imbue(utf8_locale);
 
     if (file.is_open())
-        printf("n%d: File is opened\n", rank);
+        printf("n%d: File %s is opened\n", rank, filename.c_str());
     else {
         printf("n%d: ERROR - FILE CAN'T BE OPENED\n", rank);
         return 1; //TODO: Add resource file with constants and my errcodes
@@ -65,7 +65,7 @@ int Worker::make_map(std::string filename) {
 
     file.close();
     //map.print();
-    printf("size of map: %d\n", map.get_size());
+    printf("n%d: size of map: %d\n", rank, map.get_size());
     return 0;
 }
 
@@ -95,7 +95,60 @@ void Worker::work() {
     }
     printf("n%d has finished making map\n", rank);
 
+}
 
+std::vector<std::string> split_msg(std::string msg, std::string delimiter) {
+    std::vector<std::string> vec = {};
+
+    size_t pos = 0;
+    std::string token;
+    while ((pos = msg.find(delimiter)) != std::string::npos) {
+        token = msg.substr(0, pos);
+        vec.push_back(token);
+        msg.erase(0, pos + delimiter.length());
+    }
+    vec.push_back(msg);
+    return vec;
+}
+
+int Worker::merge(int rank2, bool share) {
+    std::unordered_map<std::string, std::map<std::string, int>> mc = map.get_map();
+    std::string msg;
+    printf("n%d: sssize of map: %d\n", rank, map.get_size());
+    if (share) {
+        for(std::unordered_map<std::string, std::map<std::string, int>>::iterator it = mc.begin(); it != mc.end(); ++it) {
+            for (const auto &[key, value]: (it->second)) {
+                msg = it->first + "/" + key + "/" + std::to_string(value);
+                printf("n%d: sending msg=%s\n", rank,  msg.c_str());
+                MPI_Send(&msg[0], msg.size()+1, MPI_CHAR, rank2, 0, MPI_COMM_WORLD);
+            }
+        }
+        msg = "0";
+        MPI_Send(&msg[0], msg.size()+1, MPI_CHAR, rank2, 0, MPI_COMM_WORLD);
+    } else {
+        MPI_Status status;
+        int count;
+        std::vector<std::string> splitted_msg = {};
+        char buff[1] = {'1'};
+        while (true) {
+            MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG,MPI_COMM_WORLD, &status);
+            MPI_Get_count(&status,MPI_CHAR, &count);
+            char buff[count];
+            MPI_Recv(&buff, count, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            printf("n%d: recieving msg=%s\n", rank, buff);
+            if (buff[0] == '0')
+                break;
+            splitted_msg = split_msg(std::string(buff), "/");
+            map.insert(splitted_msg[0], splitted_msg[1], stoi(splitted_msg[2]));
+            map.print();
+        }
+
+    }
+    return 1;
+}
+
+const std::unordered_map<std::string, std::map<std::string, int>> &Worker::get_map() {
+    return map.get_map();
 }
 
 // /home/epsilon/CLionProjects/CNN/t1.txt

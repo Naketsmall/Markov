@@ -10,14 +10,13 @@
 
 void check(int val) {
     if (val != MPI_SUCCESS) {
-        printf("ERROR\n");
+        printf("ERROR WITH MPI\n");
         MPI_Abort(MPI_COMM_WORLD, val);
     }
 }
 
-int main(int argc, char* argv[]) {
 
-    //system("chcp 1251");
+int main(int argc, char* argv[]) {
 
     int rank, size;
     MPI_Status status;
@@ -28,9 +27,9 @@ int main(int argc, char* argv[]) {
     printf("process:%d/%d has started\n", rank, size);
 
 
-
     if (rank == 0) {
         Master master(size);
+
 
         std::string inp;
         printf("Enter filenames\n");
@@ -39,26 +38,31 @@ int main(int argc, char* argv[]) {
             master.add_filename(inp);
             std::cin >> inp;
         }
-        //for (std::string f: master.get_filenames())
-          //  printf("%s\n", f.c_str());
+
         MPI_Barrier(MPI_COMM_WORLD);
-        master.listen();
+        master.analyze();
+        printf("master: finished\n");
+        MPI_Barrier(MPI_COMM_WORLD);
     }
     else {
         MPI_Barrier(MPI_COMM_WORLD);
         Worker w(rank, size);
         w.work();
-        //w.make_map(f1);
+        printf("n%d: finished parsing\n", rank);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 1) {
+            printf("n%d: map_size before merge: %zu\n", rank, w.get_map().size());
+            w.merge(2, 0);
+            printf("n%d: map_size after merge: %zu\n", rank, w.get_map().size());
+
+        }
+        if (rank == 2) {
+            printf("n%d: map_size before merge: %zu\n", rank, w.get_map().size());
+            w.merge(1, 1);
+
+        }
+
     }
     MPI_Finalize();
     return 0;
 }
-
-
-
-
-
-
-
-
-

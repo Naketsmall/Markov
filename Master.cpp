@@ -14,7 +14,7 @@ void Master::add_filename(std::string filename) {
     filenames.push_back(filename);
 }
 
-void Master::listen() {
+void Master::analyze() {
     int free_rank, buf;
     MPI_Status status;
     std::string filename;
@@ -25,7 +25,7 @@ void Master::listen() {
         buf = filename.size();
         filenames.pop_back();
 
-        printf("master: gonna send %s\n", filename.c_str());
+        //printf("master: gonna send %s\n", filename.c_str());
         MPI_Send(&filename[0], filename.size()+1, MPI_CHAR, status.MPI_SOURCE, 0, MPI_COMM_WORLD);
     }
     printf("master: all filenames were sent\n");
@@ -35,9 +35,13 @@ void Master::listen() {
         MPI_Send(&filename[0], filename.size()+1, MPI_CHAR, status.MPI_SOURCE, 0, MPI_COMM_WORLD);
     }
     printf("master: all workers were informed\n");
-
 }
 
 std::vector<std::string> Master::get_filenames() {
     return filenames;
+}
+
+void Master::merge() {
+
+
 }
