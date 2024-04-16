@@ -122,13 +122,13 @@ int Worker::listen_merge() {
             MPI_Recv(&rank2, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             merge(rank2, 1);
             MPI_Send(&CODE_WORKER_EXITED, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-            MPI_Finalize();
+
             return 0;
         } else if (buf == CODE_MERGE_GET) {
             MPI_Recv(&rank2, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             merge(rank2, 0);
         } else if (buf == CODE_WORKER_LET_EXIT) {
-            return 0;
+            return 1;
         }
     }
 
@@ -170,8 +170,12 @@ int Worker::merge(int rank2, bool share) {
     return 1;
 }
 
-const std::unordered_map<std::string, std::map<std::string, int>> &Worker::get_map() {
-    return map.get_map();
+const MarkovChain &Worker::get_map() {
+    return map;
+}
+
+void Worker::print_map() {
+    map.print();
 }
 
 // /home/epsilon/CLionProjects/CNN/t1.txt

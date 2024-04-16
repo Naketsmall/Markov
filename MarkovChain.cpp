@@ -14,7 +14,7 @@ int MarkovChain::backup_to_storage() {
     return 0;
 }
 
-int MarkovChain::get_size() {
+int MarkovChain::get_size() const {
     return size_map;
 }
 

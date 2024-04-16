@@ -17,7 +17,8 @@ public:
     void work();
     int make_map(std::string filename);
     int listen_merge();
-    const std::unordered_map<std::string, std::map<std::string, int>> &get_map();
+    const MarkovChain &get_map();
+    void print_map();
 
 private:
     int merge(int rank2, bool share);

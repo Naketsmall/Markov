@@ -30,7 +30,6 @@ int main(int argc, char* argv[]) {
     if (rank == 0) {
         Master master(size);
 
-
         std::string inp;
         printf("Enter filenames\n");
         std::cin >> inp;
@@ -45,7 +44,6 @@ int main(int argc, char* argv[]) {
         MPI_Barrier(MPI_COMM_WORLD);
         int last_worker = master.merge();
         printf("master: last_worker=%d\n", last_worker);
-        MPI_Finalize();
     }
     else {
         Worker w(rank, size);
@@ -53,11 +51,15 @@ int main(int argc, char* argv[]) {
         w.work();
         printf("n%d: finished parsing\n", rank);
         MPI_Barrier(MPI_COMM_WORLD);
-        printf("n%d: map_size before merge: %zu\n", rank, w.get_map().size());
-        w.listen_merge();
-        printf("n%d: map_size after merge: %zu\n", rank, w.get_map().size());
+        printf("n%d: map_size before merge: %d\n", rank, w.get_map().get_size());
+        int rc = w.listen_merge();
+        printf("n%d: map_size after merge: %d\n", rank, w.get_map().get_size());
+
+        if (rc)
+            w.print_map();
+
 
     }
-
+    MPI_Finalize();
     return 0;
 }

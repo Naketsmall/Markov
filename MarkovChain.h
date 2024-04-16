@@ -10,11 +10,11 @@
 #include <string>
 #include <map>
 
-class MarkovChain {
+class MarkovChain { //TODO: const functions
 public:
     MarkovChain();
     int backup_to_storage();
-    int get_size();
+    int get_size() const;
     void insert(std::string s1, std::string s2);
     void insert(std::string s1, std::string s2, int count);
     const std::unordered_map<std::string, std::map<std::string, int>> &get_map();
