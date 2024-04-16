@@ -7,6 +7,7 @@
 #include <codecvt>
 #include <mpi.h>
 #include "Worker.h"
+#include "resources.h"
 
 
 class IsChars {
@@ -111,6 +112,28 @@ std::vector<std::string> split_msg(std::string msg, std::string delimiter) {
     return vec;
 }
 
+int Worker::listen_merge() {
+    int buf, rank2;
+    MPI_Status status;
+    while (1) {
+        MPI_Send(&CODE_WORKER_READY, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        MPI_Recv(&buf, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        if (buf == CODE_MERGE_SHARE) {
+            MPI_Recv(&rank2, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            merge(rank2, 1);
+            MPI_Send(&CODE_WORKER_EXITED, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+            MPI_Finalize();
+            return 0;
+        } else if (buf == CODE_MERGE_GET) {
+            MPI_Recv(&rank2, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            merge(rank2, 0);
+        } else if (buf == CODE_WORKER_LET_EXIT) {
+            return 0;
+        }
+    }
+
+}
+
 int Worker::merge(int rank2, bool share) {
     std::unordered_map<std::string, std::map<std::string, int>> mc = map.get_map();
     std::string msg;
@@ -131,16 +154,16 @@ int Worker::merge(int rank2, bool share) {
         std::vector<std::string> splitted_msg = {};
         char buff[1] = {'1'};
         while (true) {
-            MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG,MPI_COMM_WORLD, &status);
+            MPI_Probe(rank2, MPI_ANY_TAG,MPI_COMM_WORLD, &status);
             MPI_Get_count(&status,MPI_CHAR, &count);
             char buff[count];
-            MPI_Recv(&buff, count, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            MPI_Recv(&buff, count, MPI_CHAR, rank2, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             printf("n%d: recieving msg=%s\n", rank, buff);
             if (buff[0] == '0')
                 break;
             splitted_msg = split_msg(std::string(buff), "/");
             map.insert(splitted_msg[0], splitted_msg[1], stoi(splitted_msg[2]));
-            map.print();
+            //map.print();
         }
 
     }

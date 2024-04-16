@@ -16,13 +16,13 @@ public:
     Worker(int rank, int n);
     void work();
     int make_map(std::string filename);
-    int merge(int rank2, bool share);
+    int listen_merge();
     const std::unordered_map<std::string, std::map<std::string, int>> &get_map();
 
 private:
+    int merge(int rank2, bool share);
     int rank, num_processes;
     MarkovChain map;
-
 };
 
 

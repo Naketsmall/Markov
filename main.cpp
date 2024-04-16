@@ -41,28 +41,23 @@ int main(int argc, char* argv[]) {
 
         MPI_Barrier(MPI_COMM_WORLD);
         master.analyze();
-        printf("master: finished\n");
+        printf("master: making map finished\n");
         MPI_Barrier(MPI_COMM_WORLD);
+        int last_worker = master.merge();
+        printf("master: last_worker=%d\n", last_worker);
+        MPI_Finalize();
     }
     else {
-        MPI_Barrier(MPI_COMM_WORLD);
         Worker w(rank, size);
+        MPI_Barrier(MPI_COMM_WORLD);
         w.work();
         printf("n%d: finished parsing\n", rank);
         MPI_Barrier(MPI_COMM_WORLD);
-        if (rank == 1) {
-            printf("n%d: map_size before merge: %zu\n", rank, w.get_map().size());
-            w.merge(2, 0);
-            printf("n%d: map_size after merge: %zu\n", rank, w.get_map().size());
-
-        }
-        if (rank == 2) {
-            printf("n%d: map_size before merge: %zu\n", rank, w.get_map().size());
-            w.merge(1, 1);
-
-        }
+        printf("n%d: map_size before merge: %zu\n", rank, w.get_map().size());
+        w.listen_merge();
+        printf("n%d: map_size after merge: %zu\n", rank, w.get_map().size());
 
     }
-    MPI_Finalize();
+
     return 0;
 }

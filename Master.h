@@ -14,7 +14,7 @@ public:
     Master(int n);
     void add_filename(std::string filename);
     void analyze();
-    void merge();
+    int merge();
     std::vector<std::string> get_filenames();
 private:
     std::vector<std::string> filenames;
