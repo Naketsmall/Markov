@@ -19,10 +19,12 @@ public:
     void insert(std::string s1, std::string s2, int count);
     const std::unordered_map<std::string, std::map<std::string, int>> &get_map();
     void print();
+    std::string get_next_word(std::string word);
 private:
     int size_map;
     std::map<std::string, int> buf;
     std::unordered_map<std::string, std::map<std::string, int>> map;
+    std::string get_max_from_the_map(std::map<std::string, int> maap); // Теряем абстрактность
 
 };
 

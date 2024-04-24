@@ -25,7 +25,7 @@ private:
 };
 
 void clean_word(std::string &str) {
-    str.erase(std::remove_if(str.begin(), str.end(), IsChars("() —!-?,.:;1234567890")), str.end());
+    str.erase(std::remove_if(str.begin(), str.end(), IsChars("()/\" —!-?,.:;1234567890")), str.end());
     for (int i = 0; i < str.size(); i++)
         str[i] = tolower(str[i]);
 }
@@ -70,7 +70,7 @@ int Worker::make_map(std::string filename) {
     return 0;
 }
 
-std::string get_message(){
+std::string get_str_message(){
     MPI_Status status;
     MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG,MPI_COMM_WORLD,&status);
     int count;
@@ -88,7 +88,7 @@ void Worker::work() {
 
     while (true) {
         MPI_Send(&buf, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-        filename = get_message();
+        filename = get_str_message();
         printf("n%d: got msg: %s\n", rank, filename.c_str());
         if (filename == "0")
             break;
@@ -116,18 +116,21 @@ int Worker::listen_merge() {
     int buf, rank2;
     MPI_Status status;
     while (1) {
+        printf("n%d: merge worker ready\n", rank);
         MPI_Send(&CODE_WORKER_READY, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
         MPI_Recv(&buf, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         if (buf == CODE_MERGE_SHARE) {
+            printf("n%d: merge code_share\n", rank);
             MPI_Recv(&rank2, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             merge(rank2, 1);
             MPI_Send(&CODE_WORKER_EXITED, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-
             return 0;
         } else if (buf == CODE_MERGE_GET) {
+            printf("n%d: merge code_get\n", rank);
             MPI_Recv(&rank2, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             merge(rank2, 0);
         } else if (buf == CODE_WORKER_LET_EXIT) {
+            printf("n%d: merge code_exit\n", rank);
             return 1;
         }
     }
@@ -142,7 +145,7 @@ int Worker::merge(int rank2, bool share) {
         for(std::unordered_map<std::string, std::map<std::string, int>>::iterator it = mc.begin(); it != mc.end(); ++it) {
             for (const auto &[key, value]: (it->second)) {
                 msg = it->first + "/" + key + "/" + std::to_string(value);
-                printf("n%d: sending msg=%s\n", rank,  msg.c_str());
+                //printf("n%d: sending msg=%s\n", rank,  msg.c_str());
                 MPI_Send(&msg[0], msg.size()+1, MPI_CHAR, rank2, 0, MPI_COMM_WORLD);
             }
         }
@@ -176,6 +179,20 @@ const MarkovChain &Worker::get_map() {
 
 void Worker::print_map() {
     map.print();
+}
+
+int Worker::listen_generate() {
+    std::string n_word;
+    std::string inp;
+    while (true) {
+        inp = get_str_message();
+        n_word = map.get_next_word(inp);
+        if (inp == "0") {
+            printf("worker: finished listen_generate\n");
+            return 0;
+        }
+        MPI_Send(&n_word[0], n_word.size() + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+    }
 }
 
 // /home/epsilon/CLionProjects/CNN/t1.txt

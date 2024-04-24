@@ -19,6 +19,7 @@ public:
     int listen_merge();
     const MarkovChain &get_map();
     void print_map();
+    int listen_generate();
 
 private:
     int merge(int rank2, bool share);

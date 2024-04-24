@@ -6,6 +6,7 @@
 #include <mpi.h>
 #include "Worker.h"
 #include "Master.h"
+#include <locale>
 
 
 void check(int val) {
@@ -17,6 +18,7 @@ void check(int val) {
 
 
 int main(int argc, char* argv[]) {
+    setlocale(LC_ALL,"ru_RU.UTF-8");
 
     int rank, size;
     MPI_Status status;
@@ -33,7 +35,7 @@ int main(int argc, char* argv[]) {
         std::string inp;
         printf("Enter filenames\n");
         std::cin >> inp;
-        while (inp != "0"){
+        while (inp != "0") {
             master.add_filename(inp);
             std::cin >> inp;
         }
@@ -44,6 +46,15 @@ int main(int argc, char* argv[]) {
         MPI_Barrier(MPI_COMM_WORLD);
         int last_worker = master.merge();
         printf("master: last_worker=%d\n", last_worker);
+        MPI_Barrier(MPI_COMM_WORLD);
+        std::string input;
+        while (1) {
+            printf("Enter word\n");
+            std::cin >> input;
+            std::string sentence = master.make_sentence(input, 40, last_worker);
+            printf("master: sentence=%s\n", sentence.c_str());
+        }
+
     }
     else {
         Worker w(rank, size);
@@ -54,11 +65,11 @@ int main(int argc, char* argv[]) {
         printf("n%d: map_size before merge: %d\n", rank, w.get_map().get_size());
         int rc = w.listen_merge();
         printf("n%d: map_size after merge: %d\n", rank, w.get_map().get_size());
-
-        if (rc)
-            w.print_map();
-
-
+        MPI_Barrier(MPI_COMM_WORLD);
+        while (rc) {
+            printf("n%d: listening for generation\n", rank);
+            w.listen_generate();
+        }
     }
     MPI_Finalize();
     return 0;

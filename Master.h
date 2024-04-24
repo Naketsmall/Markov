@@ -16,6 +16,7 @@ public:
     void analyze();
     int merge();
     std::vector<std::string> get_filenames();
+    std::string make_sentence(std::string word, int length, int w_rank);
 private:
     std::vector<std::string> filenames;
     int num_processes;

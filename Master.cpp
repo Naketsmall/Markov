@@ -3,6 +3,7 @@
 //
 
 #include <mpi.h>
+#include <sstream>
 #include "Master.h"
 #include "resources.h"
 
@@ -69,8 +70,40 @@ int Master::merge() {
             }
         }
     }
+    if (queue > 0) {
+        MPI_Send(&CODE_WORKER_LET_EXIT, 1, MPI_INT, queue, 0, MPI_COMM_WORLD);
+        return queue;
+    }
+
     printf("master: finished cycle\n");
     MPI_Recv(&buf, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    printf("master: got recv\n");
     MPI_Send(&CODE_WORKER_LET_EXIT, 1, MPI_INT, status.MPI_SOURCE, 0, MPI_COMM_WORLD);
     return status.MPI_SOURCE;
 }
+
+std::string Master::make_sentence(std::string word, int length, int w_rank) {
+    std::stringstream ss;
+    std::string cur = std::string(word);
+    ss << (word + " ");
+    printf("master: make_sentence started\n");
+    int count;
+    MPI_Status status;
+    for (int i = 1; i < length; i++) {
+        printf("master: cur[%d]=%s\n", i, cur.c_str());
+        MPI_Send(&cur[0], cur.size()+1, MPI_CHAR, w_rank, 0, MPI_COMM_WORLD);
+        MPI_Probe(w_rank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        MPI_Get_count(&status,MPI_CHAR,&count);
+        char s2[count];
+        MPI_Recv(&s2, count, MPI_CHAR, w_rank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        printf("Got s[%d]: %s\n", i, s2);
+        ss << s2;
+        ss << " ";
+        cur = std::string(s2);
+    }
+    printf("master: make_sentence finished\n");
+    cur = "0";
+    MPI_Send(&cur[0], cur.size()+1, MPI_CHAR, w_rank, 0, MPI_COMM_WORLD);
+    return ss.str();
+}
+
