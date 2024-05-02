@@ -2,7 +2,11 @@
 // Created by epsilon on 09.04.24.
 //
 
+
 #include <algorithm>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/foreach.hpp>
 #include "MarkovChain.h"
 
 MarkovChain::MarkovChain() {
@@ -105,6 +109,34 @@ std::string MarkovChain::get_max_from_the_map(std::map<std::string, int> maap) {
             }
     );
     return pr->first;
+}
+
+MarkovChain::MarkovChain(std::stringstream &ss) {
+    this->map = {};
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_json(ss, pt);
+
+    BOOST_FOREACH(auto &w1, pt)
+    {
+        BOOST_FOREACH(auto &w2, w1.second)
+            this->insert(w1.first, w2.first, w2.second.get_value<int>());
+    }
+}
+
+std::stringstream MarkovChain::serialize_json() {
+
+    boost::property_tree::ptree mpt = {};
+    for(auto & it : map) {
+        boost::property_tree::ptree lpt = {};
+        //printf("Key: %s\n", (it.first).c_str());
+        for (const auto &[key, value]: (it.second))
+            lpt.put(key, value);
+        mpt.push_back(boost::property_tree::ptree::value_type(it.first,lpt));
+
+    }
+    std::stringstream ss;
+    boost::property_tree::write_json(ss, mpt);
+    return ss;
 }
 
 

@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
             std::cin >> inp;
         }
 
-        MPI_Barrier(MPI_COMM_WORLD);
+        //MPI_Barrier(MPI_COMM_WORLD);
         master.analyze();
         printf("master: making map finished\n");
         MPI_Barrier(MPI_COMM_WORLD);
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
         printf("master: last_worker=%d\n", last_worker);
         MPI_Barrier(MPI_COMM_WORLD);
         std::string input;
-        while (1) {
+        if (1) {
             printf("Enter word\n");
             std::cin >> input;
             std::string sentence = master.make_sentence(input, 40, last_worker);
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
     }
     else {
         Worker w(rank, size);
-        MPI_Barrier(MPI_COMM_WORLD);
+        //MPI_Barrier(MPI_COMM_WORLD);
         w.work();
         printf("n%d: finished parsing\n", rank);
         MPI_Barrier(MPI_COMM_WORLD);
@@ -66,9 +66,11 @@ int main(int argc, char* argv[]) {
         int rc = w.listen_merge();
         printf("n%d: map_size after merge: %d\n", rank, w.get_map().get_size());
         MPI_Barrier(MPI_COMM_WORLD);
-        while (rc) {
+        if (rc) {
             printf("n%d: listening for generation\n", rank);
             w.listen_generate();
+            printf("n%d: saving map\n", rank);
+            w.save_map_json("../data.json");
         }
     }
     MPI_Finalize();

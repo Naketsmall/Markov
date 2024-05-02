@@ -13,6 +13,7 @@
 class MarkovChain { //TODO: const functions
 public:
     MarkovChain();
+    MarkovChain(std::stringstream &ss);
     int backup_to_storage();
     int get_size() const;
     void insert(std::string s1, std::string s2);
@@ -20,6 +21,7 @@ public:
     const std::unordered_map<std::string, std::map<std::string, int>> &get_map();
     void print();
     std::string get_next_word(std::string word);
+    std::stringstream serialize_json();
 private:
     int size_map;
     std::map<std::string, int> buf;

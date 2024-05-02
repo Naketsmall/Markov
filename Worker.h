@@ -20,6 +20,7 @@ public:
     const MarkovChain &get_map();
     void print_map();
     int listen_generate();
+    int save_map_json(std::string filename);
 
 private:
     int merge(int rank2, bool share);

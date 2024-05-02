@@ -6,6 +6,7 @@
 #include <fstream>
 #include <codecvt>
 #include <mpi.h>
+#include <sstream>
 #include "Worker.h"
 #include "resources.h"
 
@@ -193,6 +194,15 @@ int Worker::listen_generate() {
         }
         MPI_Send(&n_word[0], n_word.size() + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
     }
+}
+
+int Worker::save_map_json(std::string filename) {
+    std::stringstream ss = map.serialize_json();
+    //std::cout << ss.str() << std::endl;
+    std::ofstream f(filename);
+    f << ss.rdbuf();
+    f.close();
+    return 0;
 }
 
 // /home/epsilon/CLionProjects/CNN/t1.txt

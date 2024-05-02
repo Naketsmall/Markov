@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(MPI REQUIRED)
 
-add_executable(CNN main.cpp Worker.cpp Worker.h MarkovChain.cpp MarkovChain.h Master.cpp Master.h resources.h tools.h)
+add_executable(CNN main.cpp Worker.cpp Worker.h MarkovChain.cpp MarkovChain.h Master.cpp Master.h resources.h)
 target_link_libraries(CNN PRIVATE MPI::MPI_CXX)
+target_include_directories(CNN PRIVATE "/home/epsilon/boost_1_85_0/")
 
